@@ -84,6 +84,7 @@ int init_terminal_ncurses(char *color, char *bcolor, int predefcol, int predefbg
 	}
 
 	init_pair(1, colp, bgcolp);
+	init_pair(2, COLOR_RED, bgcolp);
 	if (bgcolp != -1)
 		bkgd(COLOR_PAIR(1));
 	attron(COLOR_PAIR(1));
@@ -115,20 +116,70 @@ int draw_terminal_ncurses(int tty, int h, int w, int bars, int bw, int bs, int r
 
 	for (i = 0; i <  bars; i++) {
 
+		// if(f[i] > flastd[i]){//higher then last one
+		// 	if (tty) for (n = flastd[i] / 8; n < f[i] / 8; n++) for (q = 0; q < bw; q++) mvprintw((h - n), i*bw + q + i*bs + rest, "%d",8);
+		// 	else for (n = flastd[i] / 8; n < f[i] / 8; n++) for (q = 0; q < bw; q++) mvaddwstr((h - n), i*bw + q + i*bs + rest, bh[7]);
+		// 	if (f[i] % 8 != 0) {
+		// 		if (tty) for (q = 0; q < bw; q++) mvprintw( (h - n), i*bw + q + i*bs + rest, "%d",(f[i] % 8) );
+		// 		else for (q = 0; q < bw; q++) mvaddwstr( (h - n), i*bw + q + i*bs + rest, bh[(f[i] % 8) - 1]);
+		// 	}
+		// }else if(f[i] < flastd[i]){//lower then last one
+		// 	for (n = f[i] / 8; n < flastd[i]/8 + 1; n++) for (q = 0; q < bw; q++) mvaddstr( (h - n), i*bw + q + i*bs + rest, " ");
+		// 	if (f[i] % 8 != 0) {
+		// 		if (tty) for (q = 0; q < bw; q++) mvprintw((h - f[i] / 8), i*bw + q + i*bs + rest, "%d",(f[i] % 8) );
+		// 		else for (q = 0; q < bw; q++) mvaddwstr((h - f[i] / 8), i*bw + q + i*bs + rest, bh[(f[i] % 8) - 1]);
+		// 	}
+		// }
+		attron(COLOR_PAIR(1));
 		if(f[i] > flastd[i]){//higher then last one
-			if (tty) for (n = flastd[i] / 8; n < f[i] / 8; n++) for (q = 0; q < bw; q++) mvprintw((h - n), i*bw + q + i*bs + rest, "%d",8);
-			else for (n = flastd[i] / 8; n < f[i] / 8; n++) for (q = 0; q < bw; q++) mvaddwstr((h - n), i*bw + q + i*bs + rest, bh[7]);
-			if (f[i] % 8 != 0) {
-				if (tty) for (q = 0; q < bw; q++) mvprintw( (h - n), i*bw + q + i*bs + rest, "%d",(f[i] % 8) );
-				else for (q = 0; q < bw; q++) mvaddwstr( (h - n), i*bw + q + i*bs + rest, bh[(f[i] % 8) - 1]);
+			if (tty){
+				for (n = flastd[i] / 8; n < f[i] / 8; n++){
+					for (q = 0; q < bw; q++){
+						mvprintw((h - n), i*bw + q + i*bs + rest, "%d",8);
+					}
+				}
+			} else {
+				for (n = flastd[i] / 8; n < f[i] / 8; n++){
+					if (n >= (int)(h * 0.75)) attron(COLOR_PAIR(2));
+					for (q = 0; q < bw; q++){
+						mvaddwstr((h - n), i*bw + q + i*bs + rest, bh[7]);
+					}
+				}
 			}
-		}else if(f[i] < flastd[i]){//lower then last one
-			for (n = f[i] / 8; n < flastd[i]/8 + 1; n++) for (q = 0; q < bw; q++) mvaddstr( (h - n), i*bw + q + i*bs + rest, " ");
 			if (f[i] % 8 != 0) {
-				if (tty) for (q = 0; q < bw; q++) mvprintw((h - f[i] / 8), i*bw + q + i*bs + rest, "%d",(f[i] % 8) );
-				else for (q = 0; q < bw; q++) mvaddwstr((h - f[i] / 8), i*bw + q + i*bs + rest, bh[(f[i] % 8) - 1]);
+				if (tty){
+					for (q = 0; q < bw; q++){
+						mvprintw( (h - n), i*bw + q + i*bs + rest, "%d",(f[i] % 8) );
+					}
+				} else {
+					if (n >= (int)(h * 0.75)) attron(COLOR_PAIR(2));
+					for (q = 0; q < bw; q++){
+						mvaddwstr( (h - n), i*bw + q + i*bs + rest, bh[(f[i] % 8) - 1]);
+					}
+				}
+			}
+		}else {
+			if(f[i] < flastd[i]){//lower then last one
+				for (n = f[i] / 8; n < flastd[i]/8 + 1; n++){
+					for (q = 0; q < bw; q++){
+						mvaddstr( (h - n), i*bw + q + i*bs + rest, " ");
+					}
+				}
+				if (f[i] % 8 != 0) {
+					if (tty){
+						for (q = 0; q < bw; q++){
+							mvprintw((h - f[i] / 8), i*bw + q + i*bs + rest, "%d",(f[i] % 8) );
+						}
+					} else {
+						if (f[i] / 8 >= (int)(h * 0.75)) attron(COLOR_PAIR(2));
+						for (q = 0; q < bw; q++){
+							mvaddwstr((h - f[i] / 8), i*bw + q + i*bs + rest, bh[(f[i] % 8) - 1]);
+						}
+					}
+				}
 			}
 		}
+
 		flastd[i] = f[i]; //memmory for falloff func
 	}
 
